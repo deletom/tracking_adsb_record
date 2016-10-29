@@ -1,0 +1,15 @@
+{
+	"bdd": {
+		"host": "localhost"
+		,"user": ""
+		,"pwd": ""
+		,"database" :""
+	}
+	,"redis": {
+		"host": "localhost"
+		,"port": "6379"
+	}
+	,"dump1090": {
+		"host": "http://[ip_dump1090]:8080/data.json"
+	}
+}
