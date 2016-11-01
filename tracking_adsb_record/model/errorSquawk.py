@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pymysql.cursors
+import json
 from model.init_bdd import *
+from model.init_redis import *
 
 """
 Classe permettant de stocker les codes transpondeurs n'ayant pas trouvé d'équivalence dans la base Squawk
@@ -11,19 +13,27 @@ class errorSquawk:
 	def __init__(self):
 		self.intSquawk=None
 		self.objBdd = initBdd()
+		self.objRedis = initRedis()
 		
-	# Recuperation de l'ensemble des squawks en base
+	# On teste
 	def isExist(self, intSquawk):
-		with self.objBdd.cursor() as cursor:
-			cursor.execute("SELECT code_squawk FROM squawk_error WHERE code_squawk=%s", intSquawk)
-			if len(cursor.fetchall()) == 0:
-				return True
+		
+		if self.objRedis.exists('squawk_error') is False:
+			self.objRedis.set('squawk_error', '')
 			return False
+		else:
+			listOfSquawk = json.loads(self.objRedis.get('squawk_error'))
+			
+			# Et on scrute la liste pour savoir si le squawk error a déjà été soulevé
+			for key, currentSquawk in enumerate(listOfSquawk):
+				if (currentSquawk == intSquawk):
+					return True
+					break
+			
+		return False
 
 	# On enregistre une erreur squawk pour un traitement ultérieur
 	def setSquawkForError(self, intSquawk):
-		with self.objBdd.cursor() as cursor:
-			if self.isExist(intSquawk) is False:
-				cursor.execute("INSERT INTO squawk_error (code_squawk) VALUES (%s)", (intSquawk))
-				self.objBdd.commit()			
+		if self.isExist(intSquawk) is False:
+			self.objRedis.append('squawk_error', json.dumps(intSquawk))	
 		return True

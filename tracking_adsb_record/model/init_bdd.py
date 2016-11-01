@@ -15,7 +15,7 @@ class initBdd(object):
 			initBdd.__instance = object.__new__(cls)
 			
 		objConfig = config()
-		dictConfig = objConfig.getThis()			
+		dictConfig = objConfig.getThis()
 			
 		initBdd.__instance = pymysql.connect(user=dictConfig['bdd']['user'], password=dictConfig['bdd']['pwd'], host=dictConfig['bdd']['host'], db=dictConfig['bdd']['database'], charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 		return initBdd.__instance

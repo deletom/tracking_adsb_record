@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import redis
-from model.config import *
 
 """
 Classe gérant la connexion à Redis
@@ -12,10 +11,10 @@ class initRedis(object):
 
 	def __new__(cls):
 		if initRedis.__instance is None:
-			initRedis.__instance = object.__new__(cls)
+			initRedis.__instance = object.__new__(cls)	
 			
-		objConfig = config()
-		dictConfig = objConfig.getThis()			
-			
-		initRedis.__instance = redis.StrictRedis(host=dictConfig['redis']['host'], port=dictConfig['redis']['port'], db=0)
+		initRedis.__instance = redis.StrictRedis(host="localhost", port="6379", db=0)
 		return initRedis.__instance
+	
+	def flushall(self):
+		initRedis.__instance.flushall()

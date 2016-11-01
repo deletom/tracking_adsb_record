@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pymysql.cursors
+import json
 from model.init_bdd import *
+from model.init_redis import *
 from model.errorSquawk import *
 
 """
@@ -20,32 +22,38 @@ Et une description symbolisant les informations que renvoient ce code.
 class squawk:
 
 	def __init__(self):
-		self.listSquawk=[]
+		self.objRedis = initRedis()
+		self.objBdd = initBdd()
 		self.dictTypeOfSquawk={
-		        1:'military'
-		        ,2:'civil'
-		        ,3:'mixte'
-		        ,4:'emergency'
+		        '1':'military'
+		        ,'2':'civil'
+		        ,'3':'mixte'
+		        ,'4':'emergency'
 		}
+		
 		
 	# Recuperation de l'ensemble des squawks en base
 	def findAll(self):
-		objBdd = initBdd()
-		with objBdd.cursor() as cursor:
-			cursor.execute("SELECT borne_inf, borne_sup, type, description FROM squawk ORDER BY borne_inf");
-			rows = cursor.fetchall()
-			for row in rows:
-				self.listSquawk.append(row)
-			return self.listSquawk
+		if self.objRedis.exists('squawk') is False:
+			with self.objBdd.cursor() as cursor:
+			
+				cursor.execute("SELECT borne_inf, borne_sup, type, description FROM squawk ORDER BY borne_inf");
+			
+				# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
+				# Les données sont valables pendant 12 heures
+				self.objRedis.set('squawk', json.dumps(cursor.fetchall()), 43200)
+		
+		# Et on retourne l'ensemble des squawk
+		return json.loads(self.objRedis.get('squawk'))
+
 
 	# Determination du type de squawk suivant un identifiant transpondeur
-	def getDataSquawkForSquawk(self, intSquawk):
-		# Si nous n'avons pas encore rempli la liste des squawks <listSquawk> nous recherchons l'ensemble en BDD
-		if len(self.listSquawk) == 0:
-			self.findAll()		
+	def getDataSquawkForSquawk(self, intSquawk):	
+			
+		listOfSquawk = self.findAll()
 			
 		# Et on scrute la liste pour trouver le bon squawk
-		for key, currentSquawk in enumerate(self.listSquawk):
+		for key, currentSquawk in enumerate(listOfSquawk):
 			if currentSquawk['borne_sup'] == "":
 				if intSquawk == currentSquawk['borne_inf']:
 					return {
@@ -71,3 +79,4 @@ class squawk:
                         ,'code':intSquawk
                         ,'description':'N/A'
                 }
+
