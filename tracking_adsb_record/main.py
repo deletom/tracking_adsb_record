@@ -24,32 +24,36 @@ objSquawk = squawk()
 # On instancie l'objet gérant les données d'appareil
 objDataFlight = dataFlight()
 
-while 1:   
-    # URL du système DUMP1090
-    urlDump = dictConfig['dump1090']['host'].encode('ascii', 'replace')
-    
-    # Récupération des informations provenant de DUMP1090
-    listDataFlight = objDataDump1090.getThis(urlDump)
-    
-    # On regarde si l'on a bien reçu des informations de DUMP1090, 
-    # Si ce n'est pas le cas, une erreur est levée et sera présente dans "dataError"
-    if listDataFlight['dataError'] is None:
+#Flag d'exécution, si placé à 0, on sort.
+flagToExecute = 1
 
-        # On boucle sur l'ensemble des vols capturés pour ce passage
-        for key, currentFlight in enumerate(listDataFlight['dataFlight']):
-            
-            # Information du transpondeur pour ce vol
-            dictCurrentSquawk = objSquawk.getDataSquawkForSquawk(currentFlight['squawk'])
+while flagToExecute:   
     
-            # Information de l'appareil pour ce vol        
-            dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
-
-            # Enregistrement du vol
-            objDataFlight.setDataFlight(currentFlight)
-            
-    # Dans le cas où l'erreur serait présente on l'affiche 
-    else:
-        print('Pas de connexion: '+urlDump)
+    if objRedis.exists('config_dump1090_host') is True :
+    
+        # Récupération des informations provenant de DUMP1090
+        listDataFlight = objDataDump1090.getThis(objRedis.get('config_dump1090_host'))
         
-    exit()
-   
+        # On regarde si l'on a bien reçu des informations de DUMP1090, 
+        # Si ce n'est pas le cas, une erreur est levée et sera présente dans "dataError"
+        if listDataFlight['dataError'] is None:
+    
+            # On boucle sur l'ensemble des vols capturés pour ce passage
+            for key, currentFlight in enumerate(listDataFlight['dataFlight']):
+                
+                # Information du transpondeur pour ce vol
+                dictCurrentSquawk = objSquawk.getDataSquawkForSquawk(currentFlight['squawk'])
+        
+                # Information de l'appareil pour ce vol        
+                dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
+    
+                # Enregistrement du vol
+                objDataFlight.setDataFlight(currentFlight)
+                
+        # Dans le cas où l'erreur serait présente on l'affiche 
+        else:
+            print('Pas de connexion: '+urlDump)
+        exit()
+    else:
+        print('Probleme de configuration')
+        flagToExecute = 0

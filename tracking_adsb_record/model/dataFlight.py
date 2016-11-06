@@ -21,17 +21,20 @@ class dataFlight:
 	Source BDD
 	"""
 	def findAll(self):
-		if self.objRedis.exists('aircraft') is False:
-			with self.objBdd.cursor() as cursor:
-			
-				cursor.execute("SELECT icao, register, callsign, type_aircraft, type_aircraft_full, is_military FROM data_aircraft ORDER BY icao")
-			
-				# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
-				# Les données sont valables pendant 12 heures
-				self.objRedis.set('aircraft', json.dumps(cursor.fetchall()), 43200)
+		with self.objBdd.cursor() as cursor:
+			cursor.execute("SELECT icao, register, callsign, type_aircraft, type_aircraft_full, is_military FROM data_aircraft ORDER BY icao")
+			return cursor.fetchall()
 		
-		# Et on retourne l'ensemble des squawk
-		return json.loads(self.objRedis.get('aircraft'))
+	"""
+	Recuparation des données d'appareils pour les placer dans Redis
+	"""
+	def setDataInRedis(self):
+		jsonElement = json.dumps(self.findAll())
+		# On ajoute l'ensemble des informations d'appareils à redis sous la clé "aircraft"
+		# Les données sont valables pendant 12 heures
+		self.objRedis.set('aircraft', jsonElement, 43200)
+		return True
+		
 		
 	"""
 	On vient récupérer les informations pour un vol donné
@@ -42,7 +45,7 @@ class dataFlight:
 		self.strRegister = strRegister
 
 		# Récupération de l'ensemble des informations d'appareil
-		listAircraft = self.findAll()
+		listAircraft = json.loads(self.objRedis.get('aircraft'))
 
 		# On essaie de trouver une correcpondance d'appareil sur l'ensemble de la base que nous possédons
 		for key, currentAircraft in enumerate(listAircraft):

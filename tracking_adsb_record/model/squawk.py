@@ -34,23 +34,25 @@ class squawk:
 		
 	# Recuperation de l'ensemble des squawks en base
 	def findAll(self):
-		if self.objRedis.exists('squawk') is False:
-			with self.objBdd.cursor() as cursor:
+		with self.objBdd.cursor() as cursor:
 			
-				cursor.execute("SELECT borne_inf, borne_sup, type, description FROM squawk ORDER BY borne_inf");
+			cursor.execute("SELECT borne_inf, borne_sup, type, description FROM squawk ORDER BY borne_inf");
 			
-				# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
-				# Les données sont valables pendant 12 heures
-				self.objRedis.set('squawk', json.dumps(cursor.fetchall()), 43200)
-		
-		# Et on retourne l'ensemble des squawk
-		return json.loads(self.objRedis.get('squawk'))
-
+			# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
+			# Les données sont valables pendant 12 heures
+			return	cursor.fetchall()
+			
+	def setDataInRedis(self):
+		jsonElement = json.dumps(self.findAll())
+		# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
+		# Les données sont valables pendant 12 heures
+		self.objRedis.set('squawk', jsonElement, 43200)
+		return True
 
 	# Determination du type de squawk suivant un identifiant transpondeur
 	def getDataSquawkForSquawk(self, intSquawk):	
 			
-		listOfSquawk = self.findAll()
+		listOfSquawk = json.loads(self.objRedis.get('squawk'))
 			
 		# Et on scrute la liste pour trouver le bon squawk
 		for key, currentSquawk in enumerate(listOfSquawk):

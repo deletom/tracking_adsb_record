@@ -14,10 +14,9 @@ class initBdd(object):
 		if initBdd.__instance is None:
 			initBdd.__instance = object.__new__(cls)
 			
-		objConfig = config()
-		dictConfig = objConfig.getThis()
+		objRedis = initRedis()
 			
-		initBdd.__instance = pymysql.connect(user=dictConfig['bdd']['user'], password=dictConfig['bdd']['pwd'], host=dictConfig['bdd']['host'], db=dictConfig['bdd']['database'], charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+		initBdd.__instance = pymysql.connect(user=objRedis.get('config_bdd_user'), password=objRedis.get('config_bdd_pwd'), host=objRedis.get('config_bdd_host'), db=objRedis.get('config_bdd_database'), charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 		return initBdd.__instance
 		
 	def closeBdd(self):
