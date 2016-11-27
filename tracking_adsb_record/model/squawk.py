@@ -31,31 +31,40 @@ class squawk:
 		        ,'4':'emergency'
 		}
 		
-		
-	# Recuperation de l'ensemble des squawks en base
+	"""
+	Recuperation de l'ensemble des squawk en BDD
+	"""
 	def findAll(self):
 		with self.objBdd.cursor() as cursor:
 			
 			cursor.execute("SELECT borne_inf, borne_sup, type, description FROM squawk ORDER BY borne_inf");
 			
-			# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
-			# Les données sont valables pendant 12 heures
 			return	cursor.fetchall()
 			
+	"""
+	Permet d ajouter l ensemble des squawk de la BDD à Redis
+	"""
 	def setDataInRedis(self):
-		jsonElement = json.dumps(self.findAll())
-		# On ajoute l'ensemble des squawk à redis sous la clé "squawk"
-		# Les données sont valables pendant 12 heures
-		self.objRedis.set('squawk', jsonElement, 43200)
-		return True
+		squawkAll = self.findAll()
+		self.objRedis.delete('squawk')
+
+		# On ajoute l'ensemble des squawk à redis sous la clé "squawk"	
+		for key, currentValueSquawk in enumerate (squawkAll):
+			self.objRedis.lpush('squawk', json.dumps(currentValueSquawk))		
+		return self.objRedis.llen('squawk')
+	
+	
+	
 
 	# Determination du type de squawk suivant un identifiant transpondeur
 	def getDataSquawkForSquawk(self, intSquawk):	
 			
-		listOfSquawk = json.loads(self.objRedis.get('squawk'))
+		numberElement = self.objRedis.llen('squawk')
+		
+		index = 0	
 			
-		# Et on scrute la liste pour trouver le bon squawk
-		for key, currentSquawk in enumerate(listOfSquawk):
+		while index < numberElement:
+			currentSquawk = json.loads(self.objRedis.lindex('squawk', index))
 			if currentSquawk['borne_sup'] == "":
 				if intSquawk == currentSquawk['borne_inf']:
 					return {
@@ -71,10 +80,11 @@ class squawk:
 			                ,'code':intSquawk
 			                ,'description':currentSquawk['description']
 			        }
-
+			index += 1
+			
 		#Si rien n'a été trouvé pour ce code, on l'ajoute à la liste des codes en erreur pour une recherche futur
-		objErrorSquawk = errorSquawk()
-		objErrorSquawk.setSquawkForError(intSquawk)
+		#objErrorSquawk = errorSquawk()
+		#objErrorSquawk.setSquawkForError(intSquawk)
 		return {
                         'type':0
                         ,'type_libelle':'N/A'

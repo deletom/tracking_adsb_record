@@ -17,7 +17,7 @@ class dataFlight:
 		self.strIcao = None
 		
 	"""
-	Recuperation de l'ensemble des squawks
+	Recuperation de l'ensemble des appareils
 	Source BDD
 	"""
 	def findAll(self):
@@ -29,11 +29,14 @@ class dataFlight:
 	Recuparation des données d'appareils pour les placer dans Redis
 	"""
 	def setDataInRedis(self):
-		jsonElement = json.dumps(self.findAll())
-		# On ajoute l'ensemble des informations d'appareils à redis sous la clé "aircraft"
-		# Les données sont valables pendant 12 heures
-		self.objRedis.set('aircraft', jsonElement, 43200)
-		return True
+		FlightAll = self.findAll()
+		self.objRedis.delete('aircraft')
+
+		# On ajoute l'ensemble des squawk à redis sous la clé "squawk"	
+		for key, currentValueFlight in enumerate (FlightAll):
+			self.objRedis.hset('aircraft', currentValueFlight['icao']+'_'+currentValueFlight['register'], json.dumps(currentValueFlight))		
+		return self.objRedis.hlen('aircraft')
+	
 		
 		
 	"""
@@ -41,25 +44,19 @@ class dataFlight:
 	Source Redis
 	"""
 	def getDataForRegister(self, strIcao, strRegister):
-		self.strIcao = strIcao
-		self.strRegister = strRegister
-
-		# Récupération de l'ensemble des informations d'appareil
-		listAircraft = json.loads(self.objRedis.get('aircraft'))
 
 		# On essaie de trouver une correcpondance d'appareil sur l'ensemble de la base que nous possédons
-		for key, currentAircraft in enumerate(listAircraft):
-			if currentAircraft['icao'] == strIcao:
-				return {
-				        'callSign':'N/A' if currentAircraft['callsign'] == '' else currentAircraft['callsign']
-				        ,'registration':'N/A' if currentAircraft['register'] == '' else currentAircraft['register']
-				        ,'type':'N/A' if currentAircraft['type_aircraft'] == '' else currentAircraft['type_aircraft']
-				        ,'typeFull':'N/A' if currentAircraft['type_aircraft_full'] == '' else currentAircraft['type_aircraft_full']
-				        ,'isMilitary':'N/A' if currentAircraft['is_military'] == '' else currentAircraft['is_military']
-				}
-			else:
-				self.setDataAircraftForScanner(self.strIcao, self.strRegister)
-
+		if self.objRedis.hexists('aircraft', strIcao+'_'+strRegister) is True:
+			currentAircraft = json.loads(self.objRedis.hget('aircraft', strIcao+'_'+strRegister))
+			return {
+			        'callSign':'N/A' if currentAircraft['callsign'] == '' else currentAircraft['callsign']
+			        ,'registration':'N/A' if currentAircraft['register'] == '' else currentAircraft['register']
+			        ,'type':'N/A' if currentAircraft['type_aircraft'] == '' else currentAircraft['type_aircraft']
+			        ,'typeFull':'N/A' if currentAircraft['type_aircraft_full'] == '' else currentAircraft['type_aircraft_full']
+			        ,'isMilitary':'N/A' if currentAircraft['is_military'] == '' else currentAircraft['is_military']
+			}
+		else:
+			self.setDataAircraftForScanner(strIcao, strRegister)
 			return {
 				'callSign':'N/A'
 				,'registration':'N/A'
@@ -73,7 +70,7 @@ class dataFlight:
 	Source Redis
 	"""
 	def setDataAircraftForScanner(self, strIcao, strRegister):
-		self.objRedis.append('aircraft_error', json.dumps({strIcao, strRegister}) )
+		self.objRedis.rpush('aircraft_error', json.dumps([strIcao, strRegister]) )
 		return True
 
 	"""
@@ -81,5 +78,5 @@ class dataFlight:
 	Source Redis
 	"""
 	def setDataFlight(self, dictCurrentFlight):
-		self.objRedis.append('flight', json.dumps(dictCurrentFlight))
+		self.objRedis.rpush('flight', json.dumps(dictCurrentFlight))
 		return True

@@ -12,4 +12,8 @@
 	,"dump1090": {
 		"host": "http://[ip_dump1090]:8080/data.json"
 	}
+	, "sms_free": {
+		"user": ""
+		, "pwd": ""
+	}
 }

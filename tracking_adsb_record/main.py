@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*-coding:utf8 -*
+import time
 from model.init_bdd import *
 from model.init_redis import *
 from model.init import *
@@ -24,36 +25,46 @@ objSquawk = squawk()
 # On instancie l'objet gérant les données d'appareil
 objDataFlight = dataFlight()
 
-#Flag d'exécution, si placé à 0, on sort.
-flagToExecute = 1
+#Flag d'exécution de la boucle infinie, si placé à 0, on sort.
+flagToExecuteLoop = 1
 
-while flagToExecute:   
-    
-    if objRedis.exists('config_dump1090_host') is True :
-    
-        # Récupération des informations provenant de DUMP1090
-        listDataFlight = objDataDump1090.getThis(objRedis.get('config_dump1090_host'))
+#Flag comptant le nombre d'itération sans traitement
+objRedis.set('cpt_NoTraitment', 1)
+
+while flagToExecuteLoop:
+    if (objConfig.validExecuteTraitment() is True):
+        if objRedis.exists('config_dump1090_host') is True :
         
-        # On regarde si l'on a bien reçu des informations de DUMP1090, 
-        # Si ce n'est pas le cas, une erreur est levée et sera présente dans "dataError"
-        if listDataFlight['dataError'] is None:
-    
-            # On boucle sur l'ensemble des vols capturés pour ce passage
-            for key, currentFlight in enumerate(listDataFlight['dataFlight']):
-                
-                # Information du transpondeur pour ce vol
-                dictCurrentSquawk = objSquawk.getDataSquawkForSquawk(currentFlight['squawk'])
+            # Récupération des informations provenant de DUMP1090
+            listDataFlight = objDataDump1090.getThis(objRedis.get('config_dump1090_host'))
+            
+            # On regarde si l'on a bien reçu des informations de DUMP1090, 
+            # Si ce n'est pas le cas, une erreur est levée et sera présente dans "dataError"
+            if listDataFlight['dataError'] is None:
         
-                # Information de l'appareil pour ce vol        
-                dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
-    
-                # Enregistrement du vol
-                objDataFlight.setDataFlight(currentFlight)
-                
-        # Dans le cas où l'erreur serait présente on l'affiche 
+                # On boucle sur l'ensemble des vols capturés pour ce passage
+                for key, currentFlight in enumerate(listDataFlight['dataFlight']):
+                    
+                    # Information du transpondeur pour ce vol
+                    dictCurrentSquawk = objSquawk.getDataSquawkForSquawk(currentFlight['squawk'])
+                    print(dictCurrentSquawk)
+            
+                    # Information de l'appareil pour ce vol        
+                    dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
+                    print(dictCurrentAircraft)
+                    exit()                    
+        
+                    # Enregistrement du vol
+                    #objDataFlight.setDataFlight(currentFlight)
+                    
+            # Dans le cas où l'erreur serait présente on l'affiche 
+            else:
+                print('Pas de connexion: '+urlDump)
+            exit()
         else:
-            print('Pas de connexion: '+urlDump)
-        exit()
+            print('Probleme de configuration')
+            objSms.sendSMS("["+datetime.now().__str__()+"] Probleme de configuration - arret")
+            flagToExecuteLoop = 0
     else:
-        print('Probleme de configuration')
-        flagToExecute = 0
+        objRedis.incr('cpt_NoTraitment')
+    time.sleep( 5 )
