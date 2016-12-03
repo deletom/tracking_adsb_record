@@ -47,7 +47,7 @@ class config():
 	def validExecuteTraitment(self):
 		objRedis = initRedis()
 		
-		if objRedis.get('isReadyForTraitment') == '0':
+		if objRedis.exists('isReadyForTreatment') is False or objRedis.get('isReadyForTreatment') == '0':
 			return False
 		
 		return True

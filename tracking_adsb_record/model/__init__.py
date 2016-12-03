@@ -1,2 +1,3 @@
-#!/usr/bin/python2.7
-# -*-coding:utf8 -*
+from twisted.web.client import getPage
+from twisted.internet import reactor
+from twisted.python.log import err

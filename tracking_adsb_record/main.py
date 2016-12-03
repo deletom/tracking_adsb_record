@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*-coding:utf8 -*
 import time
+from twisted.web.client import getPage
+from twisted.internet import reactor
+from twisted.python.log import err
+from datetime import datetime
 from model.init_bdd import *
 from model.init_redis import *
-from model.init import *
 from model.config import *
 from model.squawk import *
 from model.dataFlight import *
@@ -29,10 +32,10 @@ objDataFlight = dataFlight()
 flagToExecuteLoop = 1
 
 #Flag comptant le nombre d'itération sans traitement
-objRedis.set('cpt_NoTraitment', 1)
+objRedis.set('cpt_NoTreatment', 1)
 
 while flagToExecuteLoop:
-    if (objConfig.validExecuteTraitment() is True):
+    if objConfig.validExecuteTraitment() is True:
         if objRedis.exists('config_dump1090_host') is True :
         
             # Récupération des informations provenant de DUMP1090
@@ -41,30 +44,71 @@ while flagToExecuteLoop:
             # On regarde si l'on a bien reçu des informations de DUMP1090, 
             # Si ce n'est pas le cas, une erreur est levée et sera présente dans "dataError"
             if listDataFlight['dataError'] is None:
+                
+                textForAlert = ''
+                nbrAircraft = 0
+                nbrAlert = 0
         
                 # On boucle sur l'ensemble des vols capturés pour ce passage
                 for key, currentFlight in enumerate(listDataFlight['dataFlight']):
                     
+                    isOkForAlert = False
+                    nbrAircraft += 1
+                    
                     # Information du transpondeur pour ce vol
                     dictCurrentSquawk = objSquawk.getDataSquawkForSquawk(currentFlight['squawk'])
-                    print(dictCurrentSquawk)
             
                     # Information de l'appareil pour ce vol        
                     dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
-                    print(dictCurrentAircraft)
-                    exit()                    
+                    
+                    # On regarde si le code transpondeur est militaire ou emergency
+                    if dictCurrentSquawk['type'] == 1 or dictCurrentSquawk['type'] == 4:
+                        isOkForAlert = True
+
+                    # On regarde si le type d'appareil est militaire                     
+                    if dictCurrentAircraft['isMilitary'] == 1:
+                        isOkForAlert = True
+                        
+                    #On complète les informations du vol en cours par les informations squawk...
+                    currentFlight ['squawk_type'] = dictCurrentSquawk['type']
+                    currentFlight ['squawk_type_libelle'] = dictCurrentSquawk['type_libelle']
+                    currentFlight ['squawk_code'] = dictCurrentSquawk['code']
+                    currentFlight ['squawk_description'] = dictCurrentSquawk['description']
+                    #... et type d'appareil
+                    currentFlight ['aircraft_callSign'] = dictCurrentAircraft['callSign']
+                    currentFlight ['aircraft_registration'] = dictCurrentAircraft['registration']
+                    currentFlight ['aircraft_type'] = dictCurrentAircraft['type']
+                    currentFlight ['aircraft_typeFull'] = dictCurrentAircraft['typeFull']
+                    currentFlight ['aircraft_isMilitary'] = dictCurrentAircraft['isMilitary']                    
         
                     # Enregistrement du vol
-                    #objDataFlight.setDataFlight(currentFlight)
+                    objDataFlight.setDataFlight(currentFlight)
                     
-            # Dans le cas où l'erreur serait présente on l'affiche 
+                    # On construit le texte de l'alerte
+                    if isOkForAlert is True and objSms.isAlertExist(currentFlight ['aircraft_callSign'], currentFlight ['squawk_code']) :
+                        textForAlert = textForAlert+dictCurrentAircraft['callSign']+" "+ dictCurrentAircraft['type']+" "+dictCurrentSquawk['type_libelle']+"\r\n"
+                        objSms.setAlert(currentFlight ['aircraft_callSign'], currentFlight ['squawk_code'])
+                        nbrAlert += 1
+                
+                # On affiche les informations recuperees lors de ce passage
+                print("["+datetime.now().__str__()+"] "+nbrAircraft.__str__()+" Aircraft - "+nbrAlert.__str__()+" Alert")                   
+                
+                #Si le texte de l'alerte n'est pas vide, on l'envoie
+                if len(textForAlert) != 0:
+                    print("["+datetime.now().__str__()+"] Alert sending")
+                    objSms.sendSMS(textForAlert)
+                    
+            # Si une erreur existe, c'est que nous n avons pas recupere les informations de DUMP1090
             else:
-                print('Pas de connexion: '+urlDump)
-            exit()
+                print("["+datetime.now().__str__()+"] No connexion Dump1090: "+urlDump)
+
         else:
             print('Probleme de configuration')
-            objSms.sendSMS("["+datetime.now().__str__()+"] Probleme de configuration - arret")
+            objSms.sendSMS("["+datetime.now().__str__()+"] Configuration Issue - End")
             flagToExecuteLoop = 0
     else:
-        objRedis.incr('cpt_NoTraitment')
-    time.sleep( 5 )
+        objRedis.incr('cpt_NoTreatment')
+        print("["+datetime.now().__str__()+"] Main - Not Ready For Treatment ("+objRedis.get('cpt_NoTreatment').__str__()+" iterations)")
+        
+    #Pause de 2 secondes avant de reboucler
+    time.sleep(2)
