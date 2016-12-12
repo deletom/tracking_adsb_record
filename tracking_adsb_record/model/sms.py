@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 import pymysql.cursors
 import urllib
-from twisted.web.client import getPage
-from twisted.internet import reactor
-
+import requests
 from model.init_bdd import *
 from model.config import *
 
@@ -26,21 +24,22 @@ class sms:
 		return self.objRedis.hexists('alert', self.strIcao+'_'+self.intSquawk)
 
 	def sendSMS(self, message):
-		message = urllib.quote_plus(message.encode('ascii', 'replace'))
-		url = "https://smsapi.free-mobile.fr/sendmsg?user="+self.objRedis['config_sms_user']+"&pass="+self.objRedis['config_sms_pwd']+"&msg="+message
-		d=getPage(url, headers={}, method="GET")
-		d.addCallback(self.print_and_stop)
-		d.addErrback(self.printError)
-		reactor.run()
+		#message = urllib.quote_plus(message.encode('ascii', 'replace'))
+		url = "https://smsapi.free-mobile.fr/sendmsg"	
+		parameter = {'user': self.objRedis['config_sms_user'], 'pass': self.objRedis['config_sms_pwd'], 'msg': message}
+		returnRequest = requests.get(url, params=parameter, verify=False)
+				
+		returnCode = returnRequest.status_code
 		
-	def print_and_stop(self, output):
-		self.dataString = output
-		if reactor.running:
-			reactor.stop()
-						
-	def printError(self, failure):
-		self.dataError = str(failure)
-		if reactor.running:
-			reactor.stop()
+		if returnCode >= 400 and returnCode < 500:
+			dataReturn = 'Error Client'
+			self.returnCode = returnCode 
+		if returnCode >= 500 and returnCode < 600:
+			dataReturn = 'Error Server'
+		if returnCode == 200:
+			dataReturn = 'OK'
 
-		
+		return {
+			'dataReturn':dataReturn
+			,'returnCode':returnCode
+		}

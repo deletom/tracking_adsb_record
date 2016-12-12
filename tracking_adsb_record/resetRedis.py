@@ -2,13 +2,9 @@
 # -*-coding:utf8 -*
 
 """
-Script d'initialisation des éléments Redis permettant le fonctionnement du script "main.py"
-3 phases principales
-- Récupération des éléments de configuration (BDD, Redis, URL Dump1090)
-- L'ensemble des codes transpondeurs (Permettant de détecter un appareil d'intêré)
-- L'ensemble des données d'appareils (Permettant d'identifier l'appariel par son nom lors du survol)
+Script des données Redis
 
-Le script passe la clé "isReadyForTraitment" de 0 au début du traitement à 1.
+Le script passe la clé "flagExecute_reset" à 1.
 """
 
 from datetime import datetime

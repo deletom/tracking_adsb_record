@@ -46,8 +46,17 @@ class config():
 	"""		
 	def validExecuteTraitment(self):
 		objRedis = initRedis()
-		
-		if objRedis.exists('isReadyForTreatment') is False or objRedis.get('isReadyForTreatment') == '0':
+
+		if objRedis.exists('flagExecute_Treatment') is False or objRedis.get('flagExecute_Treatment') == '0':
 			return False
+		"""if objRedis.exists('flagExecute_dump') is True and objRedis.get('flagExecute_dump') == '0':
+			return False"""
 		
 		return True
+
+	"""
+	Renvoi le nom du script ayant bloqué le traitement
+	"""		
+	def nameExecuteTraitment(self):
+		objRedis = initRedis()
+		return objRedis.get('nameExecute_Treatment')

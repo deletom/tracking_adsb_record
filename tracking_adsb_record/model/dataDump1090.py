@@ -1,39 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
-from twisted.web.client import getPage
-from twisted.internet import reactor
-from twisted.python.log import err
+import requests
 from model.config import *
 
 """
 Récupération des données provenant de DUMP1090
 """
 class dataDump1090():
-        
+    
         dataString = None
         dataError = None
-
-        def print_and_stop(self, output):
-                self.dataString = json.loads(output)
-                if reactor.running:
-                    reactor.stop()
-                        
-        def printError(self, failure):
-            self.dataError = str(failure)
-            if reactor.running:
-                reactor.stop()
-
+        returnCode = 200
 
         def getThis(self, urlDump):
-                objConfig = config()
-                dictConfig = objConfig.getThis()                
-                d = getPage(urlDump)
-                d.addCallback(self.print_and_stop)
-                d.addErrback(self.printError)
-                reactor.run()
+            returnRequest = requests.get(urlDump)
+            returnCode = returnRequest.status_code
+            
+            if returnCode >= 400 and returnCode < 500:
+                dataError = 'Error Client'
+                self.returnCode = returnCode 
+            if returnCode >= 500 and returnCode < 600:
+                dataError = 'Error Server'
+                self.returnCode = returnCode
+            if returnCode == 200:
+                self.dataString = returnRequest.json()
 
-                return {
-                    'dataFlight':self.dataString
-                    ,'dataError':self.dataError
-                }
+            return {
+                'dataFlight':self.dataString
+                ,'dataError':self.dataError
+                ,'returnCode':self.returnCode
+            }

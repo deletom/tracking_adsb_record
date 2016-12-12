@@ -80,3 +80,55 @@ class dataFlight:
 	def setDataFlight(self, dictCurrentFlight):
 		self.objRedis.rpush('flight', json.dumps(dictCurrentFlight))
 		return True
+	
+	def removeAllFlightIcao(self):
+		self.objRedis.delete('flight_current')
+		return True
+		
+	def addSingleFlightIcao(self, icao):
+		self.objRedis.rpush('flight_current', icao)
+		return True
+	
+	"""
+	Recuparation des données de vols pour les placer dans MySQL
+	"""
+	def setDataInBdd(self):
+
+		FlightCurrent = self.objRedis.lrange('flight_current', 0, -1)
+
+		flag = True
+		while flag is True:
+			firstElement = self.objRedis.lindex('flight', 0)
+			if firstElement is not None:
+				currentFlight = json.loads(firstElement)
+				self.setDataFlightinBdd(currentFlight)	
+				self.objRedis.lpop('flight')
+			else:
+				flag = False
+						
+		return True
+			
+	def setDataFlightinBdd(self, flight):
+		with self.objBdd.cursor() as cursor:
+			sql = "INSERT INTO live_traffic_in_bdd(hex, squawk, flight, latitude, longitude, altitude, validposition, vert_rate, validtrack, speed, messages, seen, date, distance, type_squawk, track) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+			cursor.execute(sql, (
+				flight['hex']
+				,flight['squawk']
+				,flight['flight']
+				,flight['lat']
+				,flight['lon']
+				,flight['altitude']
+				,flight['validposition']
+				,flight['vert_rate']
+				,flight['validtrack']
+				,flight['speed']
+				,flight['messages']
+				,flight['seen']
+				,flight['date']
+				,flight['distance']
+				,flight['squawk_type']
+				,flight['track']				
+			))	  
+			
+		self.objBdd.commit()
+			

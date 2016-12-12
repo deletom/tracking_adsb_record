@@ -12,8 +12,6 @@ Le script passe la clé "isReadyForTraitment" de 0 au début du traitement à 1.
 """
 
 from datetime import datetime
-from twisted.web.client import getPage
-from twisted.internet import reactor
 from model.init_bdd import *
 from model.init_redis import *
 from model.config import *
@@ -29,8 +27,8 @@ objRedis = initRedis()
 dataTextSms = ""
 
 #Défini si l'exécution doit continuer pour l'ensemble des scripts
-objRedis.set('isReadyForTraitment', 0)
-
+objRedis.set('flagExecute_Treatment', 0)
+objRedis.set('nameExecute_Treatment', 'INIT')
 
 print("["+datetime.now().__str__()+"] ADSB-Tracking - Start INIT.")
 
@@ -67,14 +65,15 @@ dataTextSms = dataTextSms+" "+returnAircraft.__str__()+" Aircraft \r\n"
 print("["+datetime.now().__str__()+"] ADSB-Tracking - Aircraft OK ("+returnAircraft.__str__()+")")
 
 if int(returnSquawk.__str__()) != 0 and int(returnAircraft.__str__()) != 0:   
-    objRedis.set('isReadyForTreatment', 1)
+    objRedis.set('flagExecute_Treatment', 1)
+    objRedis.set('nameExecute_Treatment', '')
     
-if objRedis.get('isReadyForTreatment') == '1':
+if objRedis.get('flagExecute_Treatment') == '1':
     print("["+datetime.now().__str__()+"] ADSB-Tracking - OK Treatment.")
-    dataTextSms = dataTextSms+" OK for Traitment \r\n"
+    dataTextSms = dataTextSms+" OK for Treatment \r\n"
 else:
     print("["+datetime.now().__str__()+"] ADSB-Tracking - KO Treatment.")
-    dataTextSms = dataTextSms+" KO for Traitment \r\n"   
+    dataTextSms = dataTextSms+" KO for Treatment \r\n"   
     
 print("["+datetime.now().__str__()+"] ADSB-Tracking - End INIT.")
 
