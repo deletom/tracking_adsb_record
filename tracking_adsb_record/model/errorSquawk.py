@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 import pymysql.cursors
 import json
@@ -22,7 +22,7 @@ class errorSquawk:
 			self.objRedis.set('squawk_error', '')
 			return False
 		else:
-			listOfSquawk = json.loads(self.objRedis.get('squawk_error'))
+			listOfSquawk = json.loads(self.objRedis.get('squawk_error').decode("utf-8"))
 			
 			# Et on scrute la liste pour savoir si le squawk error a déjà été soulevé
 			for key, currentSquawk in enumerate(listOfSquawk):

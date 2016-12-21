@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 import pymysql.cursors
 import json
@@ -64,7 +64,7 @@ class squawk:
 		index = 0	
 			
 		while index < numberElement:
-			currentSquawk = json.loads(self.objRedis.lindex('squawk', index))
+			currentSquawk = json.loads(self.objRedis.lindex('squawk', index).decode("utf-8"))
 			if currentSquawk['borne_sup'] == "":
 				if intSquawk == currentSquawk['borne_inf']:
 					return {

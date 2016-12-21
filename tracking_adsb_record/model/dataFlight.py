@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 import pymysql.cursors
 import json
@@ -47,7 +47,7 @@ class dataFlight:
 
 		# On essaie de trouver une correcpondance d'appareil sur l'ensemble de la base que nous possédons
 		if self.objRedis.hexists('aircraft', strIcao+'_'+strRegister) is True:
-			currentAircraft = json.loads(self.objRedis.hget('aircraft', strIcao+'_'+strRegister))
+			currentAircraft = json.loads(self.objRedis.hget('aircraft', strIcao+'_'+strRegister).decode("utf-8"))
 			return {
 			        'callSign':'N/A' if currentAircraft['callsign'] == '' else currentAircraft['callsign']
 			        ,'registration':'N/A' if currentAircraft['register'] == '' else currentAircraft['register']
@@ -100,7 +100,7 @@ class dataFlight:
 		while flag is True:
 			firstElement = self.objRedis.lindex('flight', 0)
 			if firstElement is not None:
-				currentFlight = json.loads(firstElement)
+				currentFlight = json.loads(firstElement.decode("utf-8"))
 				self.setDataFlightinBdd(currentFlight)	
 				self.objRedis.lpop('flight')
 			else:

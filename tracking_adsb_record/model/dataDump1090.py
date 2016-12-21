@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 import json
 import requests
