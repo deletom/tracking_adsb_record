@@ -45,6 +45,6 @@ objRedis.set('nameExecute_Treatment', '')
 """
 On envoie le SMS pour confirmer la bonne initialisation
 """
-"""objSms = sms()
+objSms = sms()
 objSms.sendSMS(dataTextSms)
-exit()"""
+exit()
