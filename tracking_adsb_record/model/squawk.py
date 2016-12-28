@@ -84,7 +84,7 @@ class squawk:
 			
 		#Si rien n'a été trouvé pour ce code, on l'ajoute à la liste des codes en erreur pour une recherche futur
 		objErrorSquawk = errorSquawk()
-		#objErrorSquawk.setSquawkForError(intSquawk)
+		objErrorSquawk.setSquawkForError(intSquawk)
 		
 		return {
                         'type':0

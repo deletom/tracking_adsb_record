@@ -19,6 +19,9 @@ from model.errorSquawk import *
 from model.dataFlight import *
 from model.sms import *
 
+objSms = sms()
+objSms.sendSMS("Start Treatment saveDB")
+
 #Instanciation object Redis
 objRedis = initRedis()
 
@@ -26,25 +29,31 @@ objRedis = initRedis()
 dataTextSms = ""
 
 #Défini si l'exécution doit continuer pour l'ensemble des scripts
-objRedis.set('flagExecute_dump', 0)
+objRedis.set('flagExecute_dump', 1)
 objRedis.set('nameExecute_Treatment', 'DUMP')
 
 
 print("["+datetime.now().__str__()+"] ADSB-Tracking - Start DUMP.")
-print("Number Flight: " + objRedis.llen('flight').__str__())
-print("Current Flight: " + objRedis.llen('flight_current').__str__())
+
+print("Number Flight: " + objRedis.llen('flight').decode("utf-8"))
+print("Current Flight: " + objRedis.llen('flight_current').decode("utf-8"))
 objDataFlight = dataFlight()
 objDataFlight.setDataInBdd()
-    
+
+print("Number Squawk Error: " + objRedis.llen('squawk_error').decode("utf-8"))
+objErrorSquawk = errorSquawk()
+objErrorSquawk.setDataInBdd()
+
 print("["+datetime.now().__str__()+"] ADSB-Tracking - End DUMP.")
 
 #On repositionne le traitement
-objRedis.set('flagExecute_dump', 1)
+objRedis.set('flagExecute_dump', 0)
 objRedis.set('nameExecute_Treatment', '')
 
 """
 On envoie le SMS pour confirmer la bonne initialisation
 """
-objSms = sms()
+dataTextSms = dataTextSms+"Dump OK \r\n"
+
 objSms.sendSMS(dataTextSms)
 exit()

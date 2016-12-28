@@ -14,26 +14,47 @@ class errorSquawk:
 		self.intSquawk=None
 		self.objBdd = initBdd()
 		self.objRedis = initRedis()
-		
-	# On teste
-	def isExist(self, intSquawk):
-		
-		if self.objRedis.exists('squawk_error') is False:
-			self.objRedis.set('squawk_error', '')
-			return False
-		else:
-			listOfSquawk = json.loads(self.objRedis.get('squawk_error').decode("utf-8"))
-			
-			# Et on scrute la liste pour savoir si le squawk error a déjà été soulevé
-			for key, currentSquawk in enumerate(listOfSquawk):
-				if (currentSquawk == intSquawk):
-					return True
-					break
-			
-		return False
+		self.intInsertMultiple = 1
+		self.sql = ""
 
 	# On enregistre une erreur squawk pour un traitement ultérieur
 	def setSquawkForError(self, intSquawk):
-		if self.isExist(intSquawk) is False:
-			self.objRedis.append('squawk_error', json.dumps(intSquawk))	
+		SquawkErrorCurrent = self.objRedis.lrange('squawk_error', 0, -1)
+		if intSquawk not in SquawkErrorCurrent:
+			self.objRedis.rpush('squawk_error', intSquawk)
 		return True
+	
+	"""
+	Recuparation des données de vols pour les placer dans MySQL
+	"""
+	def setDataInBdd(self):
+
+		flag = True
+		while flag is True:
+			firstElement = self.objRedis.lindex('squawk_error', 0)
+			if firstElement is not None:
+				currentSquawk = firstElement.decode("utf-8")
+				self.setDataSquawkinBdd(currentSquawk)	
+				self.objRedis.lpop('squawk_error')
+			else:
+				flag = False
+		self.objBdd.commit()	  
+				
+		return True
+			
+	def setDataSquawkinBdd(self, squawk):
+		with self.objBdd.cursor() as cursor:
+
+			if self.intInsertMultiple == 1:
+				self.sql = "INSERT INTO squawk_error(code_squawk) VALUES "
+
+			if self.intInsertMultiple == 1:
+				self.sql += "('%s')" % (squawk)
+			else:
+				self.sql += ", ('%s')" % (squawk)
+		  	
+			self.intInsertMultiple += 1
+
+			if self.intInsertMultiple == 20:
+				cursor.execute(self.sql)
+				self.intInsertMultiple = 1
