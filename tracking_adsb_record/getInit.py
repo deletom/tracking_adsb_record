@@ -20,6 +20,9 @@ from model.dataFlight import *
 from model.dataDump1090 import *
 from model.sms import *
 
+#Instanciation object sms
+objSms = sms()
+
 #Instanciation object Redis
 objRedis = initRedis()
 
@@ -68,7 +71,7 @@ if int(returnSquawk.__str__()) != 0 and int(returnAircraft.__str__()) != 0:
     objRedis.set('flagExecute_Treatment', 1)
     objRedis.set('nameExecute_Treatment', '')
     
-if objRedis.get('flagExecute_Treatment') == '1':
+if objRedis.get('flagExecute_Treatment').decode("utf-8") == '1':
     print("["+datetime.now().__str__()+"] ADSB-Tracking - OK Treatment.")
     dataTextSms = dataTextSms+" OK for Treatment \r\n"
 else:
@@ -80,6 +83,5 @@ print("["+datetime.now().__str__()+"] ADSB-Tracking - End INIT.")
 """
 On envoie le SMS pour confirmer la bonne initialisation
 """
-objSms = sms()
 objSms.sendSMS(dataTextSms)
 exit()

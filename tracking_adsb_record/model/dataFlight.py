@@ -16,6 +16,7 @@ class dataFlight:
 		self.strRegister = None
 		self.strIcao = None
 		self.intInsertMultiple = 1
+		self.sql = ""
 		
 	"""
 	Recuperation de l'ensemble des appareils
@@ -109,20 +110,25 @@ class dataFlight:
 					flag = False
 			else:
 				flag = False
-						
-		self.objBdd.commit()
+				
+		self.objBdd.commit()	  
+				
 		return True
 			
 	def setDataFlightinBdd(self, flight):
 		with self.objBdd.cursor() as cursor:
 			if self.intInsertMultiple == 1:
-				sql = "INSERT INTO live_traffic_in_bdd(hex, squawk, flight, latitude, longitude, altitude, validposition, vert_rate, validtrack, speed, messages, seen, date, distance, type_squawk, track) VALUES "
+				self.sql = "INSERT INTO live_traffic_in_bdd(hex, squawk, flight, latitude, longitude, altitude, validposition, vert_rate, validtrack, speed, messages, seen, date, distance, type_squawk, track) VALUES "
 
-			sql += "(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" % (flight['hex'],flight['squawk'],flight['flight'],flight['lat'],flight['lon'],flight['altitude'],flight['validposition'],flight['vert_rate'],flight['validtrack'],flight['speed'],flight['messages'],flight['seen'],flight['date'],flight['distance'],flight['squawk_type'],flight['track'])  
+			if self.intInsertMultiple == 1:
+				self.sql += "('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" % (flight['hex'],flight['squawk'],flight['flight'],flight['lat'],flight['lon'],flight['altitude'],flight['validposition'],flight['vert_rate'],flight['validtrack'],flight['speed'],flight['messages'],flight['seen'],flight['date'],flight['distance'],flight['squawk_type'],flight['track'])
+			else:
+				self.sql += ", ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" % (flight['hex'],flight['squawk'],flight['flight'],flight['lat'],flight['lon'],flight['altitude'],flight['validposition'],flight['vert_rate'],flight['validtrack'],flight['speed'],flight['messages'],flight['seen'],flight['date'],flight['distance'],flight['squawk_type'],flight['track'])
+		  	
+			self.intInsertMultiple += 1
 
 			if self.intInsertMultiple == 20:
-				cursor.execute(sql)	  
+				cursor.execute(self.sql)
 				self.intInsertMultiple = 1
-			
+	
 		
-			

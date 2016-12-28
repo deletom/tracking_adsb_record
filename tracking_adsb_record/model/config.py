@@ -47,10 +47,11 @@ class config():
 	def validExecuteTraitment(self):
 		objRedis = initRedis()
 
-		if objRedis.exists('flagExecute_Treatment') is False or objRedis.get('flagExecute_Treatment') == '0':
+		if objRedis.get('flagExecute_Treatment').decode("utf-8") == '0':
 			return False
-		"""if objRedis.exists('flagExecute_dump') is True and objRedis.get('flagExecute_dump') == '0':
-			return False"""
+		if objRedis.exists('flagExecute_dump') is True:
+			if objRedis.get('flagExecute_dump').decode("utf-8") == '1':
+				return False
 		
 		return True
 
@@ -59,4 +60,4 @@ class config():
 	"""		
 	def nameExecuteTraitment(self):
 		objRedis = initRedis()
-		return objRedis.get('nameExecute_Treatment')
+		return objRedis.get('nameExecute_Treatment').decode("utf-8")

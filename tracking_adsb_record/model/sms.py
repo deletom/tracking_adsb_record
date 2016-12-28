@@ -1,7 +1,7 @@
 #!/usr/bin/python3.4
 # -*- coding: utf-8 -*-
 import pymysql.cursors
-import urllib
+import urllib3
 import requests
 from model.init_bdd import *
 from model.config import *
@@ -24,9 +24,11 @@ class sms:
 		return self.objRedis.hexists('alert', self.strIcao+'_'+self.intSquawk)
 
 	def sendSMS(self, message):
-		#message = urllib.quote_plus(message.encode('ascii', 'replace'))
 		url = "https://smsapi.free-mobile.fr/sendmsg"	
 		parameter = {'user': self.objRedis['config_sms_user'], 'pass': self.objRedis['config_sms_pwd'], 'msg': message}
+		
+		urllib3.disable_warnings()
+		
 		returnRequest = requests.get(url, params=parameter, verify=False)
 				
 		returnCode = returnRequest.status_code

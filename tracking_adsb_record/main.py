@@ -14,6 +14,7 @@ from model.config import *
 from model.squawk import *
 from model.dataFlight import *
 from model.dataDump1090 import *
+from model.sms import *
 
 # On instancie l'objet Redis
 objRedis = initRedis()
@@ -36,6 +37,9 @@ flagToExecuteLoop = 1
 
 #Flag comptant le nombre d'itération sans traitement
 objRedis.set('cpt_NoTreatment', 1)
+
+objSms = sms()
+objSms.sendSMS("Start Treatment main")
 
 while flagToExecuteLoop:
     if objConfig.validExecuteTraitment() is True:
@@ -103,13 +107,11 @@ while flagToExecuteLoop:
                             textForAlert = textForAlert+dictCurrentAircraft['callSign']+" "+ dictCurrentAircraft['type']+" "+dictCurrentSquawk['type_libelle']+"\r\n"
                             objSms.setAlert(currentFlight ['aircraft_callSign'], currentFlight ['squawk_code'])
                             nbrAlert += 1
-                
-                # On affiche les informations recuperees lors de ce passage
-                print("["+datetime.now().__str__()+"] "+nbrAircraft.__str__()+" Aircraft - "+nbrAlert.__str__()+" Alert")                   
+                   
                 
                 #Si le texte de l'alerte n'est pas vide, on l'envoie
                 if len(textForAlert) != 0:
-                    print("["+datetime.now().__str__()+"] Alert sending")
+                    print("["+datetime.now().__str__()+"] "+nbrAlert.__str__()+" Alert")
                     objSms.sendSMS(textForAlert)
                     
             # Si une erreur existe, c'est que nous n avons pas recupere les informations de DUMP1090

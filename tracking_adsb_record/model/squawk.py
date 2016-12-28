@@ -83,8 +83,9 @@ class squawk:
 			index += 1
 			
 		#Si rien n'a été trouvé pour ce code, on l'ajoute à la liste des codes en erreur pour une recherche futur
-		#objErrorSquawk = errorSquawk()
+		objErrorSquawk = errorSquawk()
 		#objErrorSquawk.setSquawkForError(intSquawk)
+		
 		return {
                         'type':0
                         ,'type_libelle':'N/A'
