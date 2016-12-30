@@ -35,12 +35,12 @@ objRedis.set('nameExecute_Treatment', 'DUMP')
 
 print("["+datetime.now().__str__()+"] ADSB-Tracking - Start DUMP.")
 
-print("Number Flight: " + objRedis.llen('flight').decode("utf-8"))
-print("Current Flight: " + objRedis.llen('flight_current').decode("utf-8"))
+print("Number Flight: " + objRedis.llen('flight').__str__())
+print("Current Flight: " + objRedis.llen('flight_current').__str__())
 objDataFlight = dataFlight()
 objDataFlight.setDataInBdd()
 
-print("Number Squawk Error: " + objRedis.llen('squawk_error').decode("utf-8"))
+print("Number Squawk Error: " + objRedis.llen('squawk_error').__str__())
 objErrorSquawk = errorSquawk()
 objErrorSquawk.setDataInBdd()
 
