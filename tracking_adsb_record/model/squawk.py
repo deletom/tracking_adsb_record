@@ -61,6 +61,8 @@ class squawk:
 			
 		numberElement = self.objRedis.llen('squawk')
 		
+		print(intSquawk)
+		
 		index = 0	
 			
 		while index < numberElement:

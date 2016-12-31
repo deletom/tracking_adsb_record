@@ -7,6 +7,7 @@ Script principal. Traite l'ensemble des données de DUMP1090 pour lever les aler
 
 import time
 import requests
+import logging
 from datetime import datetime
 from model.init_bdd import *
 from model.init_redis import *
@@ -22,6 +23,9 @@ objRedis = initRedis()
 # On récupère la configuration
 objConfig = config()
 dictConfig = objConfig.getThis()
+
+# On definit le path du log
+logging.basicConfig(filename=objRedis.get('config_path_log')+time.strftime('%Y%m%d').__str__()+'_adsb.log',level=logging.DEBUG)
 
 # On instancie l'objet nous permettant de récupérer les informations des appareils
 objDataDump1090 = dataDump1090()
@@ -111,24 +115,23 @@ while flagToExecuteLoop:
                 
                 #Si le texte de l'alerte n'est pas vide, on l'envoie
                 if len(textForAlert) != 0:
-                    print("["+datetime.now().__str__()+"] "+nbrAlert.__str__()+" Alert")
+                    logging.info("["+datetime.now().__str__()+"] "+nbrAlert.__str__()+" Alert")
                     objSms.sendSMS(textForAlert)
                     
             # Si une erreur existe, c'est que nous n avons pas recupere les informations de DUMP1090
             else:
                 if listDataFlight['dataError'] == 'Error Client':
-                    print("["+datetime.now().__str__()+"] No connexion Dump1090: "+urlDump)
+                    logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] No connexion Dump1090: "+urlDump)
                 elif listDataFlight['dataError'] == 'Error Server':
-                    print("["+datetime.now().__str__()+"] Error server Dump1090: "+urlDump)
-                    objSms.sendSMS("["+datetime.now().__str__()+"] Error server - End")
-                    flagToExecuteLoop = 0                    
+                    logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] Error server Dump1090: "+urlDump)
+                    objSms.sendSMS("["+datetime.now().__str__()+"] Error server - End")                    
         else:
-            print('Probleme de configuration')
+            logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] Probleme de configuration")
             objSms.sendSMS("["+datetime.now().__str__()+"] Configuration Issue - End")
             flagToExecuteLoop = 0
     else:
         objRedis.incr('cpt_NoTreatment')
-        print("["+datetime.now().__str__()+"] Main - Not Ready For Treatment (" + objConfig.nameExecuteTraitment() + ") ("+objRedis.get('cpt_NoTreatment').__str__()+" iterations)")
+        logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] Main - Not Ready For Treatment (" + objConfig.nameExecuteTraitment() + ") ("+objRedis.get('cpt_NoTreatment').__str__()+" iterations)")
         
     #Pause de 2 secondes avant de reboucler
     time.sleep(2)

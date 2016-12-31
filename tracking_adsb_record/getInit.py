@@ -10,7 +10,8 @@ Script d'initialisation des éléments Redis permettant le fonctionnement du scr
 
 Le script passe la clé "isReadyForTraitment" de 0 au début du traitement à 1.
 """
-
+import time
+import logging
 from datetime import datetime
 from model.init_bdd import *
 from model.init_redis import *
@@ -33,52 +34,51 @@ dataTextSms = ""
 objRedis.set('flagExecute_Treatment', 0)
 objRedis.set('nameExecute_Treatment', 'INIT')
 
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Start INIT.")
-
 """
 On instancie l'objet gérant les configurations
 Et on récupère les informations pour les placer dans Redis
 Clé : config_*
 """
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Config")
 objConfig = config()
 objConfig.getThis()
 dataTextSms = dataTextSms+"Config OK \r\n"
+
+# On definit le path du log
+logging.basicConfig(filename=objRedis.get('config_path_log')+time.strftime('%Y%m%d').__str__()+'_adsb.log',level=logging.DEBUG)
 
 """
 On instancie l'objet gérant les squawk
 Et on récupère les informations pour les placer dans Redis
 Clé : squawk
 """
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Squawk")
 objSquawk = squawk()
 returnSquawk = objSquawk.setDataInRedis()
 dataTextSms = dataTextSms+" "+returnSquawk.__str__()+" Squawk \r\n"
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Squawk OK ("+returnSquawk.__str__()+")")
 
 """
 On instancie l'objet gérant les données d'appareils
 Et on récupère les informations pour les placer dans Redis
 Clé : aircraft
 """
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Aircraft")
 objDataFlight = dataFlight()
 returnAircraft = objDataFlight.setDataInRedis()
 dataTextSms = dataTextSms+" "+returnAircraft.__str__()+" Aircraft \r\n"
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Aircraft OK ("+returnAircraft.__str__()+")")
+
+logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - Squawk OK ("+returnSquawk.__str__()+")")
+logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - Aircraft OK ("+returnAircraft.__str__()+")")
 
 if int(returnSquawk.__str__()) != 0 and int(returnAircraft.__str__()) != 0:   
     objRedis.set('flagExecute_Treatment', 1)
     objRedis.set('nameExecute_Treatment', '')
     
 if objRedis.get('flagExecute_Treatment').decode("utf-8") == '1':
-    print("["+datetime.now().__str__()+"] ADSB-Tracking - OK Treatment.")
+    logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - OK Treatment.")
     dataTextSms = dataTextSms+" OK for Treatment \r\n"
 else:
-    print("["+datetime.now().__str__()+"] ADSB-Tracking - KO Treatment.")
+    logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - KO Treatment.")
     dataTextSms = dataTextSms+" KO for Treatment \r\n"   
     
-print("["+datetime.now().__str__()+"] ADSB-Tracking - End INIT.")
+logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - End INIT.")
 
 """
 On envoie le SMS pour confirmer la bonne initialisation

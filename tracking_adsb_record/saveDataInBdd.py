@@ -11,6 +11,7 @@ Script d'initialisation des éléments Redis permettant le fonctionnement du scr
 Le script passe la clé "isReadyForTraitment" de 0 au début du traitement à 1.
 """
 
+import logging
 from datetime import datetime
 from model.init_bdd import *
 from model.init_redis import *
@@ -22,8 +23,15 @@ from model.sms import *
 objSms = sms()
 objSms.sendSMS("Start Treatment saveDB")
 
+# On récupère la configuration
+objConfig = config()
+dictConfig = objConfig.getThis()
+
 #Instanciation object Redis
 objRedis = initRedis()
+
+# On definit le path du log
+logging.basicConfig(filename=objRedis.get('config_path_log')+time.strftime('%Y%m%d').__str__()+'_adsb.log',level=logging.DEBUG)
 
 #Va contenir le texte du SMS
 dataTextSms = ""
@@ -33,18 +41,18 @@ objRedis.set('flagExecute_dump', 1)
 objRedis.set('nameExecute_Treatment', 'DUMP')
 
 
-print("["+datetime.now().__str__()+"] ADSB-Tracking - Start DUMP.")
+logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] ADSB-Tracking - Start DUMP.")
 
-print("Number Flight: " + objRedis.llen('flight').__str__())
-print("Current Flight: " + objRedis.llen('flight_current').__str__())
+logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] Number Flight: " + objRedis.llen('flight').__str__())
+logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] Current Flight: " + objRedis.llen('flight_current').__str__())
 objDataFlight = dataFlight()
 objDataFlight.setDataInBdd()
 
-print("Number Squawk Error: " + objRedis.llen('squawk_error').__str__())
+logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] Number Squawk Error: " + objRedis.llen('squawk_error').__str__())
 objErrorSquawk = errorSquawk()
 objErrorSquawk.setDataInBdd()
 
-print("["+datetime.now().__str__()+"] ADSB-Tracking - End DUMP.")
+logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S').__str__()+"] ADSB-Tracking - End DUMP.")
 
 #On repositionne le traitement
 objRedis.set('flagExecute_dump', 0)
@@ -53,7 +61,7 @@ objRedis.set('nameExecute_Treatment', '')
 """
 On envoie le SMS pour confirmer la bonne initialisation
 """
-dataTextSms = dataTextSms+"Dump OK \r\n"
+dataTextSms = dataTextSms+"Dump OK"
 
 objSms.sendSMS(dataTextSms)
 exit()
