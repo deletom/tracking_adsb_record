@@ -73,10 +73,10 @@ if int(returnSquawk.__str__()) != 0 and int(returnAircraft.__str__()) != 0:
     
 if objRedis.get('flagExecute_Treatment').decode("utf-8") == '1':
     logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - OK Treatment.")
-    dataTextSms = dataTextSms+" OK for Treatment \r\n"
+    dataTextSms = dataTextSms+" OK for Treatment"
 else:
     logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - KO Treatment.")
-    dataTextSms = dataTextSms+" KO for Treatment \r\n"   
+    dataTextSms = dataTextSms+" KO for Treatment"   
     
 logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - End INIT.")
 

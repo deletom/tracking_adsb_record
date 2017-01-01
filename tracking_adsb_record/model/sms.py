@@ -27,7 +27,7 @@ class sms:
 		url = "https://smsapi.free-mobile.fr/sendmsg"	
 		parameter = {'user': self.objRedis['config_sms_user'], 'pass': self.objRedis['config_sms_pwd'], 'msg': message}
 		
-		#urllib3.disable_warnings()
+		urllib3.disable_warnings()
 		
 		returnRequest = requests.get(url, params=parameter, verify=False)
 				

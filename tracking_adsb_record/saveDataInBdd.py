@@ -12,6 +12,7 @@ Le script passe la clé "isReadyForTraitment" de 0 au début du traitement à 1.
 """
 
 import logging
+import time
 from datetime import datetime
 from model.init_bdd import *
 from model.init_redis import *
