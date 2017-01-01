@@ -44,7 +44,7 @@ objConfig.getThis()
 dataTextSms = dataTextSms+"Config OK \r\n"
 
 # On definit le path du log
-logging.basicConfig(filename=objRedis.get('config_path_log')+time.strftime('%Y%m%d').__str__()+'_adsb.log',level=logging.DEBUG)
+logging.basicConfig(filename=objRedis.get('config_path_log').decode("utf-8") + time.strftime('%Y%m%d') + '_init_adsb.log',level=logging.DEBUG)
 
 """
 On instancie l'objet gérant les squawk

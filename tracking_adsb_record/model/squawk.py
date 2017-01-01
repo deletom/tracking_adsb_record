@@ -60,9 +60,7 @@ class squawk:
 	def getDataSquawkForSquawk(self, intSquawk):	
 			
 		numberElement = self.objRedis.llen('squawk')
-		
-		print(intSquawk)
-		
+
 		index = 0	
 			
 		while index < numberElement:

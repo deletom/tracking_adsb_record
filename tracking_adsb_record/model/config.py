@@ -38,7 +38,7 @@ class config():
 			objRedis.set('config_sms_user', contentJson['sms_free']['user'])
 			objRedis.set('config_sms_pwd', contentJson['sms_free']['pwd'])
 			
-			objRedis.set('config_path_log', contentJson['path']['log'])
+			objRedis.set('config_path_log', contentJson['path']['log'].encode('ascii', 'replace'))
 
 			return True
 

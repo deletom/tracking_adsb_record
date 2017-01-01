@@ -31,7 +31,7 @@ dictConfig = objConfig.getThis()
 objRedis = initRedis()
 
 # On definit le path du log
-logging.basicConfig(filename=objRedis.get('config_path_log')+time.strftime('%Y%m%d').__str__()+'_adsb.log',level=logging.DEBUG)
+logging.basicConfig(filename=objRedis.get('config_path_log').decode("utf-8") + time.strftime('%Y%m%d') + '_savebdd_adsb.log',level=logging.DEBUG)
 
 #Va contenir le texte du SMS
 dataTextSms = ""
