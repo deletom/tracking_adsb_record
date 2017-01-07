@@ -49,8 +49,13 @@ class config():
 	def validExecuteTraitment(self):
 		objRedis = initRedis()
 
+		# Flag positionne a l'initialisation
 		if objRedis.get('flagExecute_Treatment').decode("utf-8") == '0':
 			return False
+		# Flag positionne a l'initialisation mais pilotable depuis l'IHM pour stopper le traitement
+		if objRedis.get('flagExecute_Treatment_Force').decode("utf-8") == '0':
+			return False
+		# Flag positionne a l'initialisation mais modifie par le dump pour stopper le traitement.
 		if objRedis.exists('flagExecute_dump') is True:
 			if objRedis.get('flagExecute_dump').decode("utf-8") == '1':
 				return False

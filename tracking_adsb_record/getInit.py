@@ -82,6 +82,8 @@ logging.info("["+datetime.now().__str__()+"] ADSB-Tracking - End INIT.")
 
 #On place le flag de sauvegarde des informations à 0
 objRedis.set('flagExecute_dump', 0)
+#On place le flag permettant d'arreter le traitement depuis l'IHM à 1
+objRedis.set('flagExecute_Treatment_Force', 1)
 
 """
 On envoie le SMS pour confirmer la bonne initialisation
