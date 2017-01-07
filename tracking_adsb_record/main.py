@@ -81,7 +81,7 @@ while flagToExecuteLoop:
                         dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
 
                         # On regarde si le code transpondeur est militaire ou emergency
-                        if dictCurrentSquawk['type'] == "1" or dictCurrentSquawk['type'] == "3":
+                        if dictCurrentSquawk['type'] == "1" or dictCurrentSquawk['type'] == "4":
                             isOkForAlert = True
     
                         # On regarde si le type d'appareil est militaire                     
