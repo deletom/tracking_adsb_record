@@ -20,7 +20,7 @@ dictConfig = objConfig.getThis()
 objRedis = initRedis()
 
 # On definit le path du log
-logging.basicConfig(filename=objRedis.get('config_path_log').decode("utf-8") + time.strftime('%Y%m%d') + '_diagnostic_adsb.log',level=logging.DEBUG)
+logging.basicConfig(filename=objRedis.get('config_path_log').decode("utf-8") + time.strftime('%Y%m%d') + '_diagnostic_adsb.log',level=logging.INFO)
 
 """
 logging.debug('This message should go to the log file')
@@ -35,3 +35,5 @@ logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S')+"] Number Squawk: " + objRed
 logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S')+"] Number Squawk Error: " + objRedis.llen('squawk_error').__str__())
 logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S')+"] Number Aircraft: " + objRedis.hlen('aircraft').__str__())
 logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S')+"] Number Flight: " + objRedis.llen('flight').__str__())
+logging.info("["+time.strftime('%d/%m/%Y %H:%M:%S')+"] Number Alert: " + objRedis.hlen('alert').__str__())
+

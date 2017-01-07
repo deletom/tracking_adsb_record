@@ -25,7 +25,7 @@ objConfig = config()
 dictConfig = objConfig.getThis()
 
 # On definit le path du log
-logging.basicConfig(filename=objRedis.get('config_path_log').decode("utf-8") + time.strftime('%Y%m%d') + '_main_adsb.log',level=logging.DEBUG)
+logging.basicConfig(filename=objRedis.get('config_path_log').decode("utf-8") + time.strftime('%Y%m%d') + '_main_adsb.log',level=logging.INFO)
 
 # On instancie l'objet nous permettant de récupérer les informations des appareils
 objDataDump1090 = dataDump1090()
@@ -65,8 +65,9 @@ while flagToExecuteLoop:
         
                 # On boucle sur l'ensemble des vols capturés pour ce passage
                 for key, currentFlight in enumerate(listDataFlight['dataFlight']):
-                    
+
                     if currentFlight['flight'] != '':
+
                         isOkForAlert = False
                         nbrAircraft += 1
                     
@@ -75,18 +76,18 @@ while flagToExecuteLoop:
                         
                         # Information du transpondeur pour ce vol
                         dictCurrentSquawk = objSquawk.getDataSquawkForSquawk(currentFlight['squawk'])
-            
+
                         # Information de l'appareil pour ce vol        
                         dictCurrentAircraft = objDataFlight.getDataForRegister(currentFlight['hex'], currentFlight['flight'])
-                    
+
                         # On regarde si le code transpondeur est militaire ou emergency
-                        if dictCurrentSquawk['type'] == 1 or dictCurrentSquawk['type'] == 4:
+                        if dictCurrentSquawk['type'] == "1" or dictCurrentSquawk['type'] == "3":
                             isOkForAlert = True
     
                         # On regarde si le type d'appareil est militaire                     
-                        if dictCurrentAircraft['isMilitary'] == 1:
+                        if dictCurrentAircraft['isMilitary'] == "1":
                             isOkForAlert = True
-                            
+                                                        
                         #On complète les informations du vol en cours par les informations squawk...
                         currentFlight ['squawk_type'] = dictCurrentSquawk['type']
                         currentFlight ['squawk_type_libelle'] = dictCurrentSquawk['type_libelle']
@@ -105,10 +106,10 @@ while flagToExecuteLoop:
             
                         # Enregistrement du vol
                         objDataFlight.setDataFlight(currentFlight)
-                        
+
                         # On construit le texte de l'alerte
-                        if isOkForAlert is True and objSms.isAlertExist(currentFlight ['aircraft_callSign'], currentFlight ['squawk_code']) :
-                            textForAlert = textForAlert+dictCurrentAircraft['callSign']+" "+ dictCurrentAircraft['type']+" "+dictCurrentSquawk['type_libelle']+"\r\n"
+                        if isOkForAlert is True and objSms.isAlertExist(currentFlight ['aircraft_callSign'], currentFlight ['squawk_code']) is False :
+                            textForAlert = textForAlert+currentFlight['flight']+" "+ dictCurrentAircraft['type']+" "+dictCurrentSquawk['type_libelle']+"\r\n"
                             objSms.setAlert(currentFlight ['aircraft_callSign'], currentFlight ['squawk_code'])
                             nbrAlert += 1
                    

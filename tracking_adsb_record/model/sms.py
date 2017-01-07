@@ -21,7 +21,7 @@ class sms:
 		
 	# L'alerte a-t-elle déjà été envoyées aujourd'hui ?
 	def isAlertExist(self, strIcao, intSquawk):
-		return self.objRedis.hexists('alert', self.strIcao+'_'+self.intSquawk)
+		return self.objRedis.hexists('alert', strIcao+'_'+intSquawk)
 
 	def sendSMS(self, message):
 		url = "https://smsapi.free-mobile.fr/sendmsg"	
